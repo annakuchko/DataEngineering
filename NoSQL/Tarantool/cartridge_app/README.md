@@ -1,0 +1,1 @@
+Blank app using Tarantool Cartridge to test functionality 

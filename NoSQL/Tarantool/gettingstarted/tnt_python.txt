@@ -1,0 +1,17 @@
+### Python
+
+## Install connector
+
+sudo pip3 install tarantool
+
+## Connect
+
+python3
+
+import tarantool
+
+c = tarantool.connect('127.0.0.1', 3301)
+
+c.call('getdata', 'rpg')
+
+c.call('box.execute', """  SELECT * FROM "games" """)

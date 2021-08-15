@@ -1,0 +1,84 @@
+## install
+
+sudo dnf install tarantool tarantool-devel
+
+## start
+
+tarantool
+
+## DB configure
+
+box.cfg{listen=3301}
+
+## Create space (table)
+
+box.schema.space.create('games')
+
+## Space schema
+
+box.space.games:format({
+      {name="id", type="unsigned"}, 
+      {name="name", type="string"},
+      {name="category", type="string"},
+      {name="rate", type="unsigned"}})
+
+## Create primary key based on "id"
+
+box.space.games:create_index('pkey',
+    {parts={'id'}})
+
+## Data
+
+box.space.games:insert({1, "Deus Ex", "rpg", 10})
+box.space.games:insert({2, "Fallout", "rpg", 11})
+box.space.games:insert({3, "Witcher 3", "rpg", 9})
+box.space.games:insert({4, "Sims", "sim", 8})
+box.space.games:insert({5, "Minecraft", "craft", 10})
+box.space.games:insert({6, "NFS", "sim", 10})
+
+## PK quiery
+
+box.space.games:select({1})
+box.space.games:select({1}, {iterator='GE'})
+box.space.games:select({1}, {iterator='LE'})
+
+## Secondary index
+
+box.space.games:create_index('category_rate',
+    {
+        parts={'category', 'rate'}
+    })
+ 
+
+## Secondary index queries
+
+for _, t in box.space.games.index['category_rate']:pairs('rpg') do
+    print(t)
+end
+
+for _, t in box.space.games.index['category_rate']:pairs({'rpg', 9}) do
+    print(t)
+end
+
+for _, t in box.space.games.index['category_rate']:pairs({'rpg', 10}, {iterator='GE'}) do
+    print(t)
+end
+
+## lus stored procedures
+
+## Give rights to `guest`
+
+box.schema.user.grant('guest', 'super')
+
+## Create schema
+
+function getdata(arg)
+    if arg == nil then error("NO FULLSCAN") end
+    local result = {}
+    for _, t in box.space.games.index['category_rate']:pairs(arg, {iterator='GE'}) do
+      table.insert(result, t)
+    end
+    return 'Data is', result
+end
+
+box.execute([[ SELECT * FROM "games"  ]])
